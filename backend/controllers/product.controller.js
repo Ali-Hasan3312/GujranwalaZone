@@ -1,7 +1,7 @@
 import { Product } from "../models/product.model.js"
 import { ApiError } from "../utils/apiError.js";
 import apiFeatures from "../utils/apiFeatures.js";
-import asyncHandler from "../utils/asyncHandler.js";
+import {asyncHandler} from "../utils/asyncHandler.js";
 // Create Product  --Adimn
 const createProduct =asyncHandler( async (req, res, next)=>{
    
@@ -19,18 +19,23 @@ const createProduct =asyncHandler( async (req, res, next)=>{
 })
 // Get All Products
 const getAllProducts =asyncHandler( async (req, res)=>{
-    
-        const apifeatures = await  new apiFeatures(Product.find(), req.query).search().filter()
+
+        const productCount = await Product.countDocuments();
+        const apifeatures = await  new apiFeatures(Product.find(), req.query)
+        .search()
+        .filter()
+        .pagination(5)
         const products = await apifeatures.query;
         if(!products){
-            throw new ApiError(404, "products not found")
+            throw new ApiError(404, "Products not Found")
         }
     
         res
         .status(200)
         .json({
             success: true,
-            products
+            products,
+            productCount
         })
    
 })
