@@ -1,27 +1,44 @@
 import { ApiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import jwt from "jsonwebtoken"
+import Jwt from "jsonwebtoken"
 import { User } from "../models/user.model.js";
     
 export const verifyJWT = asyncHandler(async(req, res, next) => {
     
-        const token = await req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
+    const token  = req.cookies.token;
         
         
         if (!token) {
             throw new ApiError(401, "Unauthorized request")
         }
     
-        const decodedToken = await jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
+        const decodedData = Jwt.verify(token, process.env.JWT_SECRET);
+
     
-        const user = await User.findById(decodedToken?._id).select("-password -refreshToken")
+      const user = await User.findById(decodedData?.id).select("-password ")
     
         if (!user) {
             
-            throw new ApiError(401, "Invalid Access Token")
+            throw new ApiError(401, "Invalid Token")
         }
-        req.user = user;
-        next()
+        req.user = user
+
+  next();
    
     
-})
+});
+
+export const authorizeRoles = (...roles) => {
+    return (req, res, next) => {
+      if (!roles.includes(req.user.role)) {
+        return next(
+          new ErrorHander(
+            `Role: ${req.user.role} is not allowed to access this resouce `,
+            403
+          )
+        );
+      }
+  
+      next();
+    };
+  }; 

@@ -3,18 +3,16 @@ import { upload } from "../midlewares/multer.middleware.js";
 import { loginUser,
         registerUser,
         logoutUser,
-        refreshAccessToken,
         changeCurrentPassword,
         updateAccountDetails,
         updateUserAvatar,
+        forgotPassword,
+        resetPassword
         
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../midlewares/auth.middleware.js";
 
-
-
 const userRouter = Router();
-
 userRouter.route("/register").post(
     upload.fields([
         {
@@ -40,12 +38,11 @@ userRouter.route("/login").post( upload.fields([
     ]) ,loginUser)
 
 //secured routes
-userRouter.route("/logout").post(verifyJWT,  logoutUser)
-userRouter.route("/refresh-token").post(refreshAccessToken)
-userRouter.route("/change-password").post(verifyJWT, changeCurrentPassword)
-userRouter.route("/update-account").patch(verifyJWT, updateAccountDetails)
-
-userRouter.route("/avatar").patch(verifyJWT, upload.single("avatar"), updateUserAvatar)
-
+userRouter.route("/logout").post(verifyJWT,logoutUser)
+userRouter.route("/change-password").post(verifyJWT,changeCurrentPassword)
+userRouter.route("/update-account").patch(verifyJWT,updateAccountDetails)
+userRouter.route("/avatar").patch(upload.single("Avatar"), updateUserAvatar)
+userRouter.route("/password/forgot").post(forgotPassword)
+userRouter.route("/password/reset/:token").put(resetPassword)
 
 export {userRouter}
