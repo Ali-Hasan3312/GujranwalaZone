@@ -7,10 +7,16 @@ import { loginUser,
         updateAccountDetails,
         updateUserAvatar,
         forgotPassword,
-        resetPassword
+        resetPassword,
+        getUserDetails,
+        getAllUsers,
+        getSingleUser,
+        updateUserRole,
+        deleteUser,
+        
         
 } from "../controllers/user.controller.js";
-import { verifyJWT } from "../midlewares/auth.middleware.js";
+import { verifyJWT, authorizeRoles } from "../midlewares/auth.middleware.js";
 
 const userRouter = Router();
 userRouter.route("/register").post(
@@ -44,5 +50,10 @@ userRouter.route("/update-account").patch(verifyJWT,updateAccountDetails)
 userRouter.route("/avatar").patch(upload.single("Avatar"), updateUserAvatar)
 userRouter.route("/password/forgot").post(forgotPassword)
 userRouter.route("/password/reset/:token").put(resetPassword)
+userRouter.route("/get-userDetails").get(verifyJWT,getUserDetails)
+userRouter.route("/admin/getAllUsers").get(verifyJWT,authorizeRoles("admin"),getAllUsers)
+userRouter.route("/admin/getSingleUser/:id").get(verifyJWT,authorizeRoles("admin"),getSingleUser)
+userRouter.route("/admin/update-userRole/:id").patch(verifyJWT,authorizeRoles("admin"),updateUserRole)
+userRouter.route("/admin/delete-user/:id").delete(verifyJWT,authorizeRoles("admin"),deleteUser)
 
 export {userRouter}

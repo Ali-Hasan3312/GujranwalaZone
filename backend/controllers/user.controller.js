@@ -7,6 +7,7 @@ import { extractPublicId } from "cloudinary-build-url"
 import { sendEmail } from "../utils/sendEmail.js"
 import { sendToken } from "../utils/jwtToken.js"
 import crypto from "crypto"
+import { Product } from "../models/product.model.js"
 
 const registerUser = asyncHandler( async (req, res) => {
     // get user details from frontend
@@ -105,7 +106,7 @@ const loginUser = asyncHandler(async (req, res) => {
     const user = await User.findOne({
         $or: [{ userName }, { email }]
     });
-    console.log(user);
+    
 
     // If user doesn't exist, throw an error
     if (!user) {
@@ -118,8 +119,7 @@ const loginUser = asyncHandler(async (req, res) => {
         throw new ApiError(401, "Invalid user credentials");
     }
 
-    // Generating token 
-    const token = await user.getJWTToken()
+    
 
     // Retrieving logged-in user's details from the database, excluding sensitive information
     const loggedInUser = await User.findById(user._id).select("-password");
@@ -129,21 +129,9 @@ const loginUser = asyncHandler(async (req, res) => {
         httpOnly: true,
         secure: true
     };
-
+    
     // Sending cookies and JSON response with logged-in user's details, access token, and refresh token
-    return res
-        .status(200)
-        .cookie("token", token, options)
-        .json(
-            new ApiResponse(
-                200,
-                {
-                    user: loggedInUser,
-                    
-                },
-                "User logged in successfully"
-            )
-        );
+    sendToken(user, 200, res)
 });
 
 const logoutUser = asyncHandler(async(req, res) => {
@@ -291,7 +279,7 @@ const resetPassword = asyncHandler( async (req, res, next) => {
         resetPasswordToken,
         resetPasswordExpire: { $gt: Date.now() },
       });
-      console.log(user);
+      
     if(!user){
         throw new ApiError(400, "Invalid token or has been expired")
 
@@ -308,7 +296,91 @@ const resetPassword = asyncHandler( async (req, res, next) => {
 
   sendToken(user, 200, res);
 
-})
+});
+// Get User Details
+
+const getUserDetails = asyncHandler(async (req, res, next)=>{
+    const user = await User.findById(req.user?._id);
+    if(!user){
+        throw new ApiResponse(400, "Please login to access this resource")
+    }
+    res
+    .status(200)
+    .json({
+        success: true,
+        user
+    });
+});
+// Get All Users (admin)
+const getAllUsers = async(req, res,)=>{
+    const users = await User.find()
+    res.status(200).json({
+        success: true,
+        users
+    })
+};
+// get single user (admin)
+const getSingleUser = asyncHandler(async(req, res, next)=>{
+    const user = await User.findById(req.params.id);
+    if(!user){
+        throw new ApiError(404, `User with id:${req.params.id} doesn't exist` );
+    }
+    res.status(200).json({
+        success: true,
+        user
+    })
+});
+// Update User Role  --Admin
+
+const updateUserRole = asyncHandler(async(req, res) => {
+    const {name, email, role} = req.body
+
+    if (!name || !email) {
+        throw new ApiError(400, "All fields are required")
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.params.id,
+        {
+            $set: {
+                userName: name,
+                email: email,
+                role: role
+            }
+        },
+        {new: true}
+        
+    ).select("-password")
+    if(!user){
+        throw new ApiError(404, `user with id:${req.params.id} doesn't exist`)
+       }
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, user, "User role updated successfully"))
+});
+// Delete a user --Admin
+
+const deleteUser = asyncHandler(async(req, res) => {
+   const user = await User.findById(req.params.id);
+   if(!user){
+    throw new ApiError(404, `user with id:${req.params.id} doesn't exist`)
+   }
+   await user.deleteOne();
+   res.status(200).json({
+    success: true,
+    message: "User removed successfully"
+   })
+
+   
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Account details updated successfully"))
+});
+// Creating or Updating the review
+
+
 
 
 
@@ -321,6 +393,10 @@ export {
     updateAccountDetails,
     updateUserAvatar,
     forgotPassword,
-    resetPassword
-    
+    resetPassword,
+    getUserDetails,
+    getAllUsers,
+    getSingleUser,
+    updateUserRole,
+    deleteUser
 };
