@@ -1,8 +1,4 @@
-import { timeStamp } from "console";
-import { url } from "inspector";
 import mongoose from "mongoose";
-import { type } from "os";
-
 const productSchema = new mongoose.Schema({
 
     name: {

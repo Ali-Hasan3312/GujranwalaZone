@@ -144,8 +144,6 @@ const logoutUser = asyncHandler(async(req, res) => {
     .status(200)
     .json(new ApiResponse(200, {}, "User logged Out"))
 })
-
-
 const changeCurrentPassword = asyncHandler(async(req, res) => {
     const {oldPassword, newPassword} = req.body
 
@@ -172,7 +170,6 @@ const changeCurrentPassword = asyncHandler(async(req, res) => {
     .status(200)
     .json(new ApiResponse(200, {}, "Password changed successfully"))
 })
-
 const updateAccountDetails = asyncHandler(async(req, res) => {
     const {name, email} = req.body
 
@@ -196,7 +193,6 @@ const updateAccountDetails = asyncHandler(async(req, res) => {
     .status(200)
     .json(new ApiResponse(200, user, "Account details updated successfully"))
 });
-
 const updateUserAvatar = asyncHandler(async(req, res) => {
     const avatarLocalPath = req.file?.path
 
@@ -298,7 +294,6 @@ const resetPassword = asyncHandler( async (req, res, next) => {
 
 });
 // Get User Details
-
 const getUserDetails = asyncHandler(async (req, res, next)=>{
     const user = await User.findById(req.user?._id);
     if(!user){
@@ -331,7 +326,6 @@ const getSingleUser = asyncHandler(async(req, res, next)=>{
     })
 });
 // Update User Role  --Admin
-
 const updateUserRole = asyncHandler(async(req, res) => {
     const {name, email, role} = req.body
 
@@ -360,7 +354,6 @@ const updateUserRole = asyncHandler(async(req, res) => {
     .json(new ApiResponse(200, user, "User role updated successfully"))
 });
 // Delete a user --Admin
-
 const deleteUser = asyncHandler(async(req, res) => {
    const user = await User.findById(req.params.id);
    if(!user){
@@ -378,11 +371,6 @@ const deleteUser = asyncHandler(async(req, res) => {
     .status(200)
     .json(new ApiResponse(200, user, "Account details updated successfully"))
 });
-// Creating or Updating the review
-
-
-
-
 
 export {
     

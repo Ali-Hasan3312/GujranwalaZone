@@ -1,6 +1,5 @@
-import express from "express"
 import { Router } from "express"
-import { createProduct, createProductReview, deleteProduct, getAllProducts, productDetails, updateProduct } from "../controllers/product.controller.js";
+import { createProduct, createProductReview, deleteProduct, deleteReview, getAllProducts, productDetails, productReviews, updateProduct } from "../controllers/product.controller.js";
 import { authorizeRoles, verifyJWT } from "../midlewares/auth.middleware.js";
 const productRouter = Router();
 
@@ -11,5 +10,6 @@ productRouter.route("/admin/products/:id")
 .delete(verifyJWT,authorizeRoles("admin"),deleteProduct)
 productRouter.route("/products/:id").get(productDetails);
 productRouter.route("/review").put(verifyJWT, createProductReview)
+productRouter.route("/allreviews").get(verifyJWT, productReviews).delete(deleteReview)
 
 export {productRouter}

@@ -39,7 +39,6 @@ const getAllProducts =asyncHandler( async (req, res)=>{
         })
    
 })
-
 // Update a product --Admin 
 const updateProduct =asyncHandler( async(req, res, next) => {
     try {
@@ -68,7 +67,6 @@ const updateProduct =asyncHandler( async(req, res, next) => {
     }
 
 })
-
 // delete a product
 const deleteProduct = asyncHandler( async (req, res, next)=>{
     try {
@@ -137,12 +135,52 @@ const createProductReview = asyncHandler(async (req, res) =>{
     product.reviews.forEach((rev)=>{ 
         avg+=rev.rating
     })
-    console.log(avg);
+   
     product.ratings = avg / product.reviews.length;
      await product.save({validateBeforeSave: false});
      res.status(200).json({
         success: true
      })
 
+
 }) ;
-export {getAllProducts, createProduct, updateProduct, deleteProduct, productDetails, createProductReview}
+// Get all reviews of single product 
+const productReviews = asyncHandler (async (req, res)=>{
+    const product = await Product.findById(req.query.id);
+    if(!product){
+        throw new ApiError(404, "Product not found")
+    }
+    res.status(200).json({
+        success: true,
+       reviews: product.reviews
+    });
+
+})
+// Delete a review 
+const deleteReview = asyncHandler(async(req,res)=>{
+    const product = await Product.findById(req.query.productId);
+    if(!product){
+        throw new ApiError(404, "Product not found")
+    }
+    const reviews = product.reviews.filter((rev)=> rev._id.toString()!==req.query.id);
+    let avg = 0;
+    reviews.forEach((rev)=>{ 
+        avg+=rev.rating
+    })
+   
+   const ratings = avg / reviews.length;
+  const  numOfReviews = reviews.length;
+     await Product.findByIdAndUpdate(req.query.productId, {
+        $set:{
+            ratings,
+            reviews,
+            numOfReviews
+        }
+     })
+     res.status(200).json({
+        success: true
+     })
+
+
+})
+export {getAllProducts, createProduct, updateProduct, deleteProduct, productDetails, createProductReview, productReviews,deleteReview}
