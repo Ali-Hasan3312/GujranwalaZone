@@ -1,7 +1,9 @@
 import { TryCatch } from "../middlewares/error.middleware.js";
-import { User } from "../models/user.model.js";
+import { IUser, User } from "../models/user.model.js";
+import crypto from "crypto"
 // import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import ErrorHandler from "../utils/errorHandler.js";
+import { sendEmail } from "../utils/sendEmail.js";
 
 
 export const newUser = TryCatch(async (req, res, next) => {
@@ -20,7 +22,8 @@ export const newUser = TryCatch(async (req, res, next) => {
   
    
     const   photo = req.file
-    console.log(photo);
+    
+    
     
     
   const user = await User.create({
@@ -108,7 +111,109 @@ export const logoutUser = TryCatch(async(req, res) => {
         success: true,
         message: "User Logged Out Successfully"
     })
-})
+});
+export const changeCurrentPassword = TryCatch(async(req, res) => {
+    const {oldPassword, newPassword} = req.body
+
+    
+
+    const user = await User.findById(req.user?._id)
+    // const user = await User.findOne({ email });
+    
+    const isPasswordCorrect = await user?.isPasswordCorrect(oldPassword);
+    
+
+    if (!isPasswordCorrect) {
+        throw new ErrorHandler("Invalid old password",400)
+    }
+
+    
+
+        // Update the user's password in the database
+        if(user?.password!==undefined){
+         user.password = newPassword;
+        }
+       
+    await user?.save({validateBeforeSave: false});
+
+    return res
+    .status(200)
+    .json({
+        success:true,
+        message:"Password Changed Successfully"
+    })
+});
+export const forgotPassword = TryCatch (async (req, res,next) => {
+    const user = await User.findOne({email: req.body.email});
+
+    if(!user){
+       return next(new ErrorHandler("User not found",404))
+    }
+    // Get Password Token
+    const resetToken = user.getResetPasswordToken();
+    await user.save({validateBeforeSave: false});
+
+    const resetPasswordUrl = `${req.protocol}://${req.get("host")}/api/v1/password/reset/${resetToken}`;
+    const message = `Your password reset token is :- \n\n ${resetPasswordUrl} \n\n If you have not requested this email then, please ignore it `;
+
+    try {
+        await sendEmail({
+            email: user.email,
+            subject: `Gujranwala Zone Password Recovery`,
+            message
+        });
+        res
+        .status(200)
+        .json({
+            success: true,
+            message: `Email sent to ${user.email} sucessfully`
+        })
+        
+    } catch (error) {
+        user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save({ validateBeforeSave: false });
+        throw new ErrorHandler("Internal Server Error",500)
+        
+    }
+});
+
+export const resetPassword = TryCatch(async (req, res, next) => {
+  const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
+
+  console.log(`Reset token (hashed): ${resetPasswordToken}`);
+
+  const user = await User.findOne({
+    resetPasswordToken,
+    resetPasswordExpire: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    console.log(`User not found or token expired. Token: ${resetPasswordToken}`);
+    return next(new ErrorHandler("Invalid token or has been expired", 400));
+  }
+
+  if (req.body.password !== req.body.confirmPassword) {
+    return next(new ErrorHandler("Passwords do not match", 401));
+  }
+
+  user.password = req.body.password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+
+  await user.save();
+
+  const token = user.getJWTToken();
+  res.status(201).cookie("token", token).json({
+    success: true,
+    user,
+    token,
+  });
+});
 // Admin 
 export const getAllUsers = TryCatch(async(req,res,next)=>{
    const users = await User.find()
@@ -116,7 +221,7 @@ export const getAllUsers = TryCatch(async(req,res,next)=>{
        success: true,
        users
    })
-})
+});
 // Admin 
 export const getUser = TryCatch(async(req,res,next)=>{
    const id = req.params.id;

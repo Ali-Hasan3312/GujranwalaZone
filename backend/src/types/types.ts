@@ -13,3 +13,8 @@ export type ControllerType = (
     res: Response,
     next: NextFunction
   ) => Promise<void | Response<any, Record<string, any>>>;
+  export interface emailOptionsProps{
+    email:string;
+    subject:string;
+    message:string;
+  }

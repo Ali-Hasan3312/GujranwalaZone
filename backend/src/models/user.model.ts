@@ -7,7 +7,7 @@ import 'dotenv/config'
 export interface IUser extends Document{
     _id: string;
     name: string;
-    photo: string;
+    photo?: string;
     email: string;
     password: string;
     gender: "male" | "female";
@@ -48,7 +48,7 @@ const userSchema = new mongoose.Schema({
     },
     photo: {
         type: String,
-        required: [true, "Please add Photo"]
+        
     },
     role: {
         type: String,
