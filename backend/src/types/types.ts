@@ -18,3 +18,25 @@ export type ControllerType = (
     subject:string;
     message:string;
   }
+export interface newProductRequestBody{
+  name:string;
+  price:number;
+  stock:number;
+  category:string;
+  photot:File;
+}
+export interface BaseQuery{
+  name?: {
+    $regex: string;
+    $options: string;
+  };
+  price?: { $lte: number };
+  category?: string;
+}
+export type SearchRequestQuery = {
+  search?: string;
+  price?: string;
+  category?: string;
+  sort?: string;
+  page?: string;
+};

@@ -19,16 +19,18 @@ app.use(express.urlencoded({extended: true, limit: "10mb"}))
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(cookieParser());
 
+
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
     
 })
 import userRouter from "./routes/user.route.js";
+import productRouter from "./routes/product.route.js";
 
 
 
 // Using Routes
 app.use("/api/v1/user",userRouter)
-
-// app.use("uploads",express.static("uploads"))
+app.use("/api/v1/product",productRouter)
+app.use("/uploads",express.static("uploads"))
 app.use(errorMiddleware)
