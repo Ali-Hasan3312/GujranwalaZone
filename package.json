@@ -2,5 +2,8 @@
   "devDependencies": {
     "@types/nodemailer": "^6.4.15",
     "nodemailer": "^6.9.13"
+  },
+  "dependencies": {
+    "node-cache": "^5.1.2"
   }
 }
