@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import { connectDB } from "./DB/database.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 import bodyParser from "body-parser";
+import NodeCache from "node-cache";
 const app = express();
 
 const port = process.env.PORT ;
@@ -14,6 +15,7 @@ app.use(cors({
 }));
 
 connectDB();
+export const myCache = new NodeCache();
 app.use(express.json({limit: "10mb"}))
 app.use(express.urlencoded({extended: true, limit: "10mb"}))
 app.use(bodyParser.json({ limit: '10mb' }));

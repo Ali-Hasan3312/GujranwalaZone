@@ -4,39 +4,19 @@ import { BaseQuery, SearchRequestQuery, newProductRequestBody } from "../types/t
 import ErrorHandler from "../utils/errorHandler.js";
 import { Product } from "../models/product.model.js";
 import { rm } from "fs";
+import { myCache } from "../app.js";
+import { invalidateCache } from "../utils/features.js";
 
-export const newProduct = TryCatch(async(req:Request<{},{},newProductRequestBody>,res,next)=>{
-    
-    const {name,price,stock,category} = req.body;
-    const photo = req.file;
-    if(!photo){
-        return next(new ErrorHandler("Please Add Photo",401));
-    }
 
-    if(!name || !price ||!stock ||!category){
-        rm(photo.path, ()=>{
-           console.log("Deleted");
-           
-        })
-        return next(new ErrorHandler("All fields are required",401));
-    }
-    
-    
-  const product =  await Product.create({
-        name,
-        price,
-        category: category.toLocaleLowerCase(),
-        stock,
-        photo: photo.path
-    });
-   return res.status(201).json({
-        success:true,
-        message:"Product Created Successfully",
-        product
-    })
-});
 export const getlatestProducts = TryCatch(async(req:Request<{},{},newProductRequestBody>,res,next)=>{
-  const products  = await Product.find().sort({createdAt:-1}).limit(5);
+  let products;
+
+  if (myCache.has("latest-products"))
+    products = JSON.parse(myCache.get("latest-products") as string);
+  else {
+    products = await Product.find({}).sort({ createdAt: -1 }).limit(5);
+    myCache.set("latest-products", JSON.stringify(products));
+  }
     return res.status(201).json({
         success:true,
         products,
@@ -44,15 +24,30 @@ export const getlatestProducts = TryCatch(async(req:Request<{},{},newProductRequ
     });
 });
 export const getAllCategories = TryCatch(async(req,res,next)=>{
-  const products  = await Product.distinct("category");
+  let categories;
+
+  if (myCache.has("categories"))
+    categories = JSON.parse(myCache.get("categories") as string);
+  else {
+    categories = await Product.distinct("category");
+    myCache.set("categories", JSON.stringify(categories));
+  }
     return res.status(201).json({
         success:true,
-        products,
+        categories,
         
     });
 });
 export const getAdminProducts = TryCatch(async(req,res,next)=>{
-    const products  = await Product.find();
+     let products;
+     if(myCache.has("all-products")){
+      products = JSON.parse(myCache.get("all-products") as string)
+     }
+     else{
+       products  = await Product.find();
+       myCache.set("all-products",JSON.stringify(products))
+
+     }
     return res.status(201).json({
         success:true,
         products,
@@ -60,19 +55,56 @@ export const getAdminProducts = TryCatch(async(req,res,next)=>{
     });
 })
 export const getSingleProduct = TryCatch(async(req,res,next)=>{
-    const id = req.params.id
-    const product  = await Product.findById(id);
-    if(!product){
-
-        return next(new ErrorHandler("Invalid Product Id",404))
-    }
+  let product; 
+  const id = req.params.id;
+  if(myCache.has(`product-${id}`)){
+    product = JSON.parse(myCache.get(`product-${id}`) as string);
+    
+  }else{
+    product  = await Product.findById(id);
+    if(!product) return next(new ErrorHandler("Invalid Product Id",404))
+    
+    myCache.set(`product-${id}`,JSON.stringify(product))
+  
+  }
+    
         return res.status(201).json({
         success:true,
         product,
         
     });
 })
+export const newProduct = TryCatch(async(req:Request<{},{},newProductRequestBody>,res,next)=>{
+    
+  const {name,price,stock,category} = req.body;
+  const photo = req.file;
+  if(!photo){
+      return next(new ErrorHandler("Please Add Photo",401));
+  }
 
+  if(!name || !price ||!stock ||!category){
+      rm(photo.path, ()=>{
+         console.log("Deleted");
+         
+      })
+      return next(new ErrorHandler("All fields are required",401));
+  }
+  
+  
+const product =  await Product.create({
+      name,
+      price,
+      category: category.toLocaleLowerCase(),
+      stock,
+      photo: photo.path
+  });
+  invalidateCache({ product: true, admin: true });
+ return res.status(201).json({
+      success:true,
+      message:"Product Created Successfully",
+      product
+  })
+});
 export const updateProduct = TryCatch(async(req,res,next)=>{
     const {id} = req.params;
     const photo = req.file;
@@ -97,6 +129,11 @@ export const updateProduct = TryCatch(async(req,res,next)=>{
     product.save({
         validateBeforeSave:false
     })
+    invalidateCache({
+      product: true,
+      productId: String(product._id),
+      admin: true,
+    });
  
    return res.status(201).json({
         success:true,
@@ -115,6 +152,11 @@ export const deleteProduct = TryCatch(async(req,res,next)=>{
         console.log("Photo Deleted");     
     });
     await product.deleteOne();
+    invalidateCache({
+      product: true,
+      productId: String(product._id),
+      admin: true,
+    });
     return res.status(201).json({
         success:true,
         message: "Product Deleted Successfully",
