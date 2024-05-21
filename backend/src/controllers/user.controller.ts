@@ -50,7 +50,7 @@ export const newUser = TryCatch(async (req, res, next) => {
 });
 export const loginUser = TryCatch(async (req, res) => {
    // Extracting userName, email, and password from the request body
-   const { name, email, password } = req.body;
+   const { name, email, password, _id } = req.body;
     
    // Checking if userName or email is provided
    if (!(email || name)) {
@@ -61,9 +61,7 @@ export const loginUser = TryCatch(async (req, res) => {
    }
 
    // Finding the user in the database based on userName or email
-   const user = await User.findOne({
-       $or: [{ name }, { email }]
-   });
+   const user = await User.findById(_id);
    
 
    // If user doesn't exist, throw an error
