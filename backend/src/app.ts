@@ -43,7 +43,7 @@ app.use("/api/v1/user",userRouter)
 app.use("/api/v1/product",productRouter)
 app.use("/api/v1/order",orderRouter)
 app.use("/api/v1/payment",paymentRouter)
-app.use("/api/v1/dashbord",dashboardRouter)
+app.use("/api/v1/dashboard",dashboardRouter)
 
 app.use("/uploads",express.static("uploads"))
 app.use(errorMiddleware)
