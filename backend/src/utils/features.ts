@@ -47,7 +47,7 @@ export const invalidateCache = ({
       const order = orderItems[i];
       const product = await Product.findById(order.productId);
       if (!product) throw new Error("Product Not Found");
-      product.stock -= order.quantity;
+      product.stock = Number(product.stock) - order.quantity;
       await product.save();
     }
   };
@@ -61,7 +61,7 @@ export const invalidateCache = ({
     categories,
     productsCount,
   }: {
-    categories: string[];
+    categories: String[];
     productsCount: number;
   }) => {
     const categoriesCountPromise = categories.map((category) =>
@@ -74,11 +74,47 @@ export const invalidateCache = ({
   
     const categoryCount: Record<string, number>[] = [];
   
-    categories.forEach((category, i) => {
+    categories.forEach((category:any, i) => {
       categoryCount.push({
-        [category]: Math.round((categoriesCount[i] / productsCount) * 100),
+        [category]: (Math.round((categoriesCount[i] / productsCount) * 100)),
       });
     });
   
     return categoryCount;
+  };
+
+  interface MyDocument extends Document {
+    createdAt: Date;
+    discount?: number;
+    total?: number;
+  }
+  type FuncProps = {
+    length: number;
+    docArr: MyDocument[];
+    today: Date;
+    property?: "discount" | "total";
+  };
+  
+  export const getChartData = ({
+    length,
+    docArr,
+    today,
+    property,
+  }: FuncProps) => {
+    const data: number[] = new Array(length).fill(0);
+  
+    docArr.forEach((i) => {
+      const creationDate = i.createdAt;
+      const monthDiff = (today.getMonth() - creationDate.getMonth() + 12) % 12;
+  
+      if (monthDiff < length) {
+        if (property) {
+          data[length - monthDiff - 1] += i[property]!;
+        } else {
+          data[length - monthDiff - 1] += 1;
+        }
+      }
+    });
+  
+    return data;
   };

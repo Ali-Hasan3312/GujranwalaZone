@@ -17,6 +17,7 @@ export interface IUser extends Document{
     getJWTToken(): string;
     getResetPasswordToken(): string;
     role: "admin" | "user";
+    age: number;
     createdAt: Date;
     updatedAt: Date;
    
@@ -55,6 +56,10 @@ const userSchema = new mongoose.Schema({
        enum: ["admin", "user"],
        default: "user"
     },
+    dob: {
+        type: Date,
+        required: [true, "Please enter Date of birth"],
+      },
    
    
     resetPasswordToken: String,
@@ -63,6 +68,21 @@ const userSchema = new mongoose.Schema({
 },{
     timestamps: true
 });
+
+userSchema.virtual("age").get(function () {
+    const today = new Date();
+    const dob = this.dob;
+    let age = today.getFullYear() - dob.getFullYear();
+  
+    if (
+      today.getMonth() < dob.getMonth() ||
+      (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())
+    ) {
+      age--;
+    }
+  
+    return age;
+  });
 
 
 userSchema.pre("save", async function (next){

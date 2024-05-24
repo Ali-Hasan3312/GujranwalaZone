@@ -7,9 +7,9 @@ import { sendEmail } from "../utils/sendEmail.js";
 
 
 export const newUser = TryCatch(async (req, res, next) => {
-   const { name, email,password, _id, gender } = req.body;
+   const { name, email,password, _id, gender, dob } = req.body;
   
-   if (!name || !email  || !_id || !password) {
+   if (!name || !email  || !_id || !password || !gender || !dob) {
        return next(new ErrorHandler("All fields are required", 400));
    }
    const existedUser = await User.findOne({
@@ -30,6 +30,7 @@ export const newUser = TryCatch(async (req, res, next) => {
        name,
        email,
        gender,
+       dob: new Date(dob),
        photo: photo?.path,
        _id,
        password

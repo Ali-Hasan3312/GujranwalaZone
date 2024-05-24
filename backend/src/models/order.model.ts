@@ -1,6 +1,36 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema(
+interface ShippingInfo {
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  pinCode: number;
+}
+
+interface OrderItem {
+  name: string;
+  photo: string;
+  price: number;
+  quantity: number;
+  productId: mongoose.Types.ObjectId;
+}
+
+interface OrderDocument extends Document {
+  shippingInfo: ShippingInfo;
+  user: string;
+  subtotal: number;
+  tax: number;
+  shippingCharges: number;
+  discount: number;
+  total: number;
+  status: "Processing" | "Shipped" | "Delivered";
+  orderItems: OrderItem[];
+  createdAt: Date;
+    updatedAt: Date;
+}
+
+const orderSchema = new mongoose.Schema<OrderDocument>(
   {
     shippingInfo: {
       address: {
@@ -75,4 +105,4 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-export const Order = mongoose.model("Order", userSchema);
+export const Order = mongoose.model<OrderDocument>("Order", orderSchema);
