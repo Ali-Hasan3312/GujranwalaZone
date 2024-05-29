@@ -1,10 +1,13 @@
+import crypto from "crypto";
 import { TryCatch } from "../middlewares/error.middleware.js";
-import { IUser, User } from "../models/user.model.js";
-import crypto from "crypto"
+import { User } from "../models/user.model.js";
 // import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import ErrorHandler from "../utils/errorHandler.js";
 import { sendEmail } from "../utils/sendEmail.js";
-
+import { config } from "dotenv";
+config({
+    path: "./.env"
+})
 
 export const newUser = TryCatch(async (req, res, next) => {
    const { name, email,password, _id, gender, dob } = req.body;
@@ -19,13 +22,7 @@ export const newUser = TryCatch(async (req, res, next) => {
    if (existedUser) {
        throw new ErrorHandler("User with email or userName already exists",401)
    }
-  
-   
     const   photo = req.file
-    
-    
-    
-    
   const user = await User.create({
        name,
        email,
@@ -51,18 +48,18 @@ export const newUser = TryCatch(async (req, res, next) => {
 });
 export const loginUser = TryCatch(async (req, res) => {
    // Extracting userName, email, and password from the request body
-   const { name, email, password, _id } = req.body;
-    
+   const { name, email, password } = req.body;
    // Checking if userName or email is provided
    if (!(email || name)) {
        throw new ErrorHandler("userName or email is required",400);
-   }
-   if (!(password)) {
-       throw new ErrorHandler("password is required",400);
-   }
-
-   // Finding the user in the database based on userName or email
-   const user = await User.findById(_id);
+    }
+    if (!(password)) {
+        throw new ErrorHandler("password is required",400);
+    }
+    
+    // Finding the user in the database based on userName or email
+    const user = await User.findOne({email});
+    
    
 
    // If user doesn't exist, throw an error
@@ -96,8 +93,6 @@ export const loginUser = TryCatch(async (req, res) => {
       token,
     });
 });
-
-
 export const logoutUser = TryCatch(async(req, res) => {
     res.cookie("token", null, {
         expires: new Date(Date.now()),
@@ -152,8 +147,9 @@ export const forgotPassword = TryCatch (async (req, res,next) => {
     const resetToken = user.getResetPasswordToken();
     await user.save({validateBeforeSave: false});
 
-    const resetPasswordUrl = `${req.protocol}://${req.get("host")}/api/v1/password/reset/${resetToken}`;
-    const message = `Your password reset token is :- \n\n ${resetPasswordUrl} \n\n If you have not requested this email then, please ignore it `;
+    const resetPasswordUrl = `${process.env.PROTOCOL}password-reset/${resetToken}`;
+    // const resetPasswordUrl = `${req.protocol}://${req.get("host")}/api/v1/password/reset/${resetToken}`;
+    const message = `Click here to reset your password :- \n\n ${resetPasswordUrl} \n\n If you have not requested this email then, please ignore it `;
 
     try {
         await sendEmail({
@@ -177,27 +173,21 @@ export const forgotPassword = TryCatch (async (req, res,next) => {
         
     }
 });
-
 export const resetPassword = TryCatch(async (req, res, next) => {
+    const userToken = req.body.token
   const resetPasswordToken = crypto
     .createHash("sha256")
-    .update(req.params.token)
+    .update(userToken)
     .digest("hex");
-
-  console.log(`Reset token (hashed): ${resetPasswordToken}`);
 
   const user = await User.findOne({
     resetPasswordToken,
     resetPasswordExpire: { $gt: Date.now() },
   });
-
+ 
   if (!user) {
     console.log(`User not found or token expired. Token: ${resetPasswordToken}`);
     return next(new ErrorHandler("Invalid token or has been expired", 400));
-  }
-
-  if (req.body.password !== req.body.confirmPassword) {
-    return next(new ErrorHandler("Passwords do not match", 401));
   }
 
   user.password = req.body.password;
@@ -235,7 +225,6 @@ export const getUser = TryCatch(async(req,res,next)=>{
       user
    })
 });
-
 // Admin
 export const deleteUser = TryCatch(async(req,res,next)=>{
    const id = req.params.id;

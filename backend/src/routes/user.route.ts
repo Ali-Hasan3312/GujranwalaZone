@@ -8,7 +8,7 @@ const userRouter = express.Router()
 // To Register new user
 userRouter.route("/new").post(upload,newUser)
 // To login user
-userRouter.route("/login").get(loginUser)
+userRouter.route("/login").post(loginUser)
 // To logout user
 userRouter.route("/logout").post(logoutUser)
 //To change current password of user or admin
