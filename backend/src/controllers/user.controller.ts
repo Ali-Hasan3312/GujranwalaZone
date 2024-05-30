@@ -10,43 +10,50 @@ config({
 })
 
 export const newUser = TryCatch(async (req, res, next) => {
-   const { name, email,password, _id, gender, dob } = req.body;
-  
-   if (!name || !email  || !_id || !password || !gender || !dob) {
-       return next(new ErrorHandler("All fields are required", 400));
-   }
-   const existedUser = await User.findOne({
-       $or: [{ name }, { email }]
-   })
+    const { name, email, password, gender, date, photo } = req.body;
 
-   if (existedUser) {
-       throw new ErrorHandler("User with email or userName already exists",401)
-   }
-    const   photo = req.file
-  const user = await User.create({
-       name,
-       email,
-       gender,
-       dob: new Date(dob),
-       photo: photo?.path,
-       _id,
-       password
-   });
+    console.log("Received Data:", { name, email, password, gender, date, photo });
 
-   const createdUser = await User.findById(user._id).select(
-      "-password "
-  )
+    if (!name || !email || !password || !gender || !date) {
+        return next(new ErrorHandler("All fields are required", 400));
+    }
 
-  if (!createdUser) {
-      next(new ErrorHandler("Something went wrong while registering the user",500))
-  }
-   return res.status(201).json({
-       success: true,
-       message: "User Created Successfully",
-       user
-   })
+    const existedUser = await User.findOne({ email });
+    if (existedUser) {
+        return next(new ErrorHandler("User with email already exists", 401));
+    }
+
+    try {
+        const user = await User.create({
+            name,
+            email,
+            gender,
+            date: new Date(date),
+            photo,
+            password
+        });
+
+        await user.save();
+
+        const createdUser = await User.findById(user._id).select("-password");
+        console.log(createdUser);
+        
+
+        if (!createdUser) {
+            return next(new ErrorHandler("Something went wrong while registering the user", 500));
+        }
+
+        return res.status(201).json({
+            success: true,
+            message: "User Created Successfully",
+            user: createdUser
+        });
+    } catch (error) {
+        console.error("Error creating user:", error);
+        return next(new ErrorHandler("Internal Server Error", 500));
+    }
 });
-export const loginUser = TryCatch(async (req, res) => {
+export const loginUser = TryCatch(async (req, res,next) => {
    // Extracting userName, email, and password from the request body
    const { name, email, password } = req.body;
    // Checking if userName or email is provided
@@ -58,26 +65,31 @@ export const loginUser = TryCatch(async (req, res) => {
     }
     
     // Finding the user in the database based on userName or email
-    const user = await User.findOne({email});
+    const user0 = await User.findOne({email});
     
+  
    
 
    // If user doesn't exist, throw an error
-   if (!user) {
+   if (!user0) {
        throw new ErrorHandler("User doesn't exist",400);
    }
 
    // Checking if the provided password is valid
-   const isPasswordValid = await user.isPasswordCorrect(password);
+   const isPasswordValid = await user0.isPasswordCorrect(password);
    if (!isPasswordValid) {
-       throw new ErrorHandler("Invalid user credentials",401);
+       res.status(401).json({
+        success: false,
+        message:"Invalid User Credentials"
+       });
    }
 
    
 
    // Retrieving logged-in user's details from the database, excluding sensitive information
-   const loggedInUser = await User.findById(user._id).select("-password");
-
+   const user = await User.findById(user0._id).select("-password");
+   console.log(user);
+   
    // Options for setting HTTP-only secure cookies
    const options = {
        httpOnly: true,
@@ -85,11 +97,11 @@ export const loginUser = TryCatch(async (req, res) => {
    };
    
    // Sending cookies and JSON response with logged-in user's details, access token, and refresh token
-   const token = user.getJWTToken();
+   const token = user?.getJWTToken();
    res.status(201).cookie("token", token).json({
       success: true,
       message: "User LoggedIn Successfully",
-      loggedInUser,
+      user,
       token,
     });
 });

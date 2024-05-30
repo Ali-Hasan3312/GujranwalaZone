@@ -10,6 +10,7 @@ export interface IUser extends Document{
     photo?: string;
     email: string;
     password: string;
+    date: Date;
     gender: "male" | "female";
     resetPasswordToken?: string;
     resetPasswordExpire?: number;
@@ -24,9 +25,7 @@ export interface IUser extends Document{
 }
 const userSchema = new mongoose.Schema({
   
-    _id: {
-        type: String,
-    },
+    
     name: {
         type: String,
         required: [true, "Please enter Name"]
@@ -39,7 +38,7 @@ const userSchema = new mongoose.Schema({
     },
     gender:{
         type: String,
-        enum: ["male", "female"]
+        enum: ["Male", "Female"]
     },
     password: {
         type: String,
@@ -54,7 +53,7 @@ const userSchema = new mongoose.Schema({
        enum: ["admin", "user"],
        default: "user"
     },
-    dob: {
+    date: {
         type: Date,
         required: [true, "Please enter Date of birth"],
       },
@@ -69,7 +68,7 @@ const userSchema = new mongoose.Schema({
 
 userSchema.virtual("age").get(function () {
     const today = new Date();
-    const dob = this.dob;
+    const dob = this.date;
     let age = today.getFullYear() - dob.getFullYear();
   
     if (
