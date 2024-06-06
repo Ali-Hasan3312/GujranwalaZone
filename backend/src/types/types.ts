@@ -23,7 +23,7 @@ export interface newProductRequestBody{
   price:number;
   stock:number;
   category:string;
-  photot:File;
+  photo:string;
 }
 export interface BaseQuery{
   name?: {

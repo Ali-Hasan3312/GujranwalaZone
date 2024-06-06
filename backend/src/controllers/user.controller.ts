@@ -91,19 +91,37 @@ export const loginUser = TryCatch(async (req, res,next) => {
    console.log(user);
    
    // Options for setting HTTP-only secure cookies
-   const options = {
-       httpOnly: true,
-       secure: true
-   };
+//    interface optionsType{
+//     httpOnly: boolean,
+//     secure: boolean,
+//     sameSite: string | undefined,
+//     maxAge: number
+//    }
+//    const options:optionsType = {
+//        httpOnly: true,
+//        secure: true,
+//        sameSite: 'Lax',
+//        maxAge: 24 * 60 * 60 * 1000
+//    };
    
    // Sending cookies and JSON response with logged-in user's details, access token, and refresh token
    const token = user?.getJWTToken();
-   res.status(201).cookie("token", token).json({
-      success: true,
-      message: "User LoggedIn Successfully",
-      user,
-      token,
-    });
+   if(!token){
+    return next (new ErrorHandler("Something went wrong while creating a token",501))
+   }
+   res.status(201).cookie("token", token, {
+    // httpOnly: true, // Ensures the cookie is sent only over HTTP(S), not accessible via JavaScript
+    secure: true, // Send the cookie only over HTTPS in production
+    sameSite: 'none', // Adjust the SameSite attribute as necessary ('strict', 'lax', 'none')
+    // maxAge: 24 * 60 * 60 * 1000 // Cookie expiry time in milliseconds (1 day)
+  }).json({
+    success: true,
+    message: "User LoggedIn Successfully",
+    user,
+    token,
+  });
+    
+    
 });
 export const logoutUser = TryCatch(async(req, res) => {
     res.cookie("token", null, {

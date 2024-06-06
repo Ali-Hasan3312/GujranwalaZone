@@ -37,6 +37,9 @@ import { orderRouter } from "./routes/order.route.js";
 import { paymentRouter } from "./routes/payment.route.js";
 import { dashboardRouter } from "./routes/stats.route.js";
 
+app.get("/", (req, res) => {
+    res.send("API Working with /api/v1");
+  });
 
 // Using Routes
 app.use("/api/v1/user",userRouter)

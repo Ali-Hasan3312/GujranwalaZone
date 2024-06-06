@@ -76,14 +76,15 @@ export const getSingleProduct = TryCatch(async(req,res,next)=>{
 })
 export const newProduct = TryCatch(async(req:Request<{},{},newProductRequestBody>,res,next)=>{
     
-  const {name,price,stock,category} = req.body;
-  const photo = req.file;
+  const {name,price,stock,category,photo} = req.body;
+  console.log({name,price,stock,category});
+  
   if(!photo){
       return next(new ErrorHandler("Please Add Photo",401));
   }
 
   if(!name || !price ||!stock ||!category){
-      rm(photo.path, ()=>{
+      rm(photo, ()=>{
          console.log("Deleted");
          
       })
@@ -96,8 +97,10 @@ const product =  await Product.create({
       price,
       category: category.toLocaleLowerCase(),
       stock,
-      photo: photo.path
+      photo
   });
+  console.log(product);
+  
   invalidateCache({ product: true, admin: true });
  return res.status(201).json({
       success:true,
