@@ -6,7 +6,10 @@ import { Product } from "../models/product.model.js";
 import { rm } from "fs";
 import { myCache } from "../app.js";
 import { invalidateCache } from "../utils/features.js";
-
+import { config } from "dotenv";
+config({
+  path: "../../.env"
+})
 
 export const getlatestProducts = TryCatch(async(req:Request<{},{},newProductRequestBody>,res,next)=>{
   let products;
@@ -76,16 +79,16 @@ export const getSingleProduct = TryCatch(async(req,res,next)=>{
 })
 export const newProduct = TryCatch(async(req:Request<{},{},newProductRequestBody>,res,next)=>{
     
-  const {name,price,stock,category,photo} = req.body;
-  console.log({name,price,stock,category});
+  const {name,price,stock,category} = req.body;
   
+  const photo = req.file;
   if(!photo){
       return next(new ErrorHandler("Please Add Photo",401));
   }
 
   if(!name || !price ||!stock ||!category){
-      rm(photo, ()=>{
-         console.log("Deleted");
+      rm(photo.path, ()=>{
+         
          
       })
       return next(new ErrorHandler("All fields are required",401));
@@ -97,7 +100,7 @@ const product =  await Product.create({
       price,
       category: category.toLocaleLowerCase(),
       stock,
-      photo
+      photo:photo.path
   });
   console.log(product);
   

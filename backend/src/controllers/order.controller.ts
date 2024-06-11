@@ -18,6 +18,8 @@ export const newOrder = TryCatch(async(req: Request<{}, {}, NewOrderRequestBody>
         discount,
         total,
       } = req.body;
+      console.log(user);
+      
       if (!shippingInfo || !orderItems || !user || !subtotal || !tax || !total)
         return next(new ErrorHandler("Please Enter All Fields", 400));
     const order = await Order.create({
@@ -35,7 +37,7 @@ export const newOrder = TryCatch(async(req: Request<{}, {}, NewOrderRequestBody>
       product: true,
       order: true,
       admin: true,
-      userId: user,
+      userId: user._id,
       productId: order.orderItems.map((i) => String(i.productId)),
     });
    return  res.status(201).json({
@@ -47,13 +49,7 @@ export const newOrder = TryCatch(async(req: Request<{}, {}, NewOrderRequestBody>
 export const myOrders = TryCatch(async(req,res,next)=>{
   const {id:user} = req.query;
   let orders = [];
-  const key = `myOrders-${user}`;
-    if(myCache.has(key)){
-      orders = JSON.parse(myCache.get(key) as string);
-    }else{
-      orders = await Order.find({user}).populate("user","name");
-      myCache.set(key,JSON.stringify(orders))
-    }
+  orders = await Order.find({'user._id':user}).populate("user","name");
     return res.status(200).json({
       success:true,
       orders
@@ -117,7 +113,7 @@ export const processOrder = TryCatch(async (req, res, next) => {
     product: false,
     order: true,
     admin: true,
-    userId: order.user,
+    userId: order.user._id,
     orderId: String(order._id),
   });
 
@@ -138,7 +134,7 @@ export const deleteOrder = TryCatch(async (req, res, next) => {
     product: false,
     order: true,
     admin: true,
-    userId: order.user,
+    userId: order.user._id,
     orderId: String(order._id),
   });
 

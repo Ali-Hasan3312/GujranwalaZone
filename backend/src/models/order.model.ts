@@ -16,9 +16,12 @@ interface OrderItem {
   productId: mongoose.Types.ObjectId;
 }
 
-interface OrderDocument extends Document {
+export interface OrderDocument extends Document {
   shippingInfo: ShippingInfo;
-  user: string;
+  user: {
+    _id:string,
+    name:string
+  };
   subtotal: number;
   tax: number;
   shippingCharges: number;
@@ -56,9 +59,12 @@ const orderSchema = new mongoose.Schema<OrderDocument>(
     },
 
     user: {
-      type: String,
-      ref: "User",
-      required: true,
+     _id:{
+      type:String
+     },
+     name:{
+      type:String
+     },
     },
 
     subtotal: {

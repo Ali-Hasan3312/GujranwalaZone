@@ -1,27 +1,21 @@
-import express from "express"
-import { changeCurrentPassword, deleteUser, forgotPassword, getAllUsers, getUser, loginUser, logoutUser, newUser, resetPassword } from "../controllers/user.controller.js"
-import { authorizeRoles, verifyJWT } from "../middlewares/auth.js"
-import { upload } from "../middlewares/multer.middleware.js"
-const userRouter = express.Router()
+import express from "express";
+import {
+  deleteUser,
+  getAllUsers,
+  getUser,
+  newUser,
+} from "../controllers/user.controller.js";
+import { adminOnly } from "../middlewares/auth.js";
 
-// route = /api/v1/user/new
-// To Register new user
-userRouter.route("/new").post(upload,newUser)
-// To login user
-userRouter.route("/login").post(loginUser)
-// To logout user
-userRouter.route("/logout").post(logoutUser)
-//To change current password of user or admin
-userRouter.route("/change-password").post(verifyJWT,changeCurrentPassword)
-//To send email of token to user for forgotten password
-userRouter.route("/forgot-password").post(forgotPassword)
-// To reset forgotten password
-userRouter.route("/password/reset/:token").put(resetPassword)
+const userRouter = express.Router();
 
+// route - /api/v1/user/new
+userRouter.post("/new", newUser);
 
-// To Get All users by admin
-userRouter.route("/getAllUsers").get(verifyJWT,authorizeRoles("admin"),getAllUsers)
-//To Delete a user by admin
-userRouter.route("/:id").get(getUser).delete(verifyJWT,authorizeRoles("admin"),deleteUser)
+// Route - /api/v1/user/all
+userRouter.get("/all", adminOnly, getAllUsers);
 
-export default userRouter
+// Route - /api/v1/user/dynamicID
+userRouter.route("/:id").get(getUser).delete(adminOnly, deleteUser);
+
+export default userRouter;

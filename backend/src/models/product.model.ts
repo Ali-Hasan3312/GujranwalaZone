@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 interface IProduct extends Document {
-  
+  _id:string;
   name: string;
   photo: string;
   price: Number;
@@ -13,7 +13,7 @@ interface IProduct extends Document {
 
 const productSchema = new mongoose.Schema(
   {
-    
+   
     name: {
       type: String,
       required: [true, "Please enter Name"],

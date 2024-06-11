@@ -2,6 +2,7 @@ import { NextFunction, Response,Request } from "express";
 
 export interface NewUserRequestBody{
     name: string;
+    dob:Date;
     email: string;
     photo: string;
     gender: string;
@@ -66,7 +67,10 @@ export type ShippingInfoType = {
 
 export interface NewOrderRequestBody {
   shippingInfo: ShippingInfoType;
-  user: string;
+  user: {
+    _id:string,
+    name:string
+  };
   subtotal: number;
   tax: number;
   shippingCharges: number;
