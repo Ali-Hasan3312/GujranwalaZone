@@ -49,7 +49,6 @@ export const getDashboardStats = TryCatch(async(req,res,next)=>{
               $lte: lastMonth.end,
             },
           });
-      
           const thisMonthOrdersPromise = Order.find({
             createdAt: {
               $gte: thisMonth.start,
@@ -105,21 +104,21 @@ export const getDashboardStats = TryCatch(async(req,res,next)=>{
         ]);
         const thisMonthRevenue = thisMonthOrders.reduce((total,order)=> total + (order.total || 0),0);
         const lastMonthRevenue = lastMonthOrders.reduce((total,order)=> total + (order.total || 0),0);
-
         const changePercent = {
             revenue: calculatePercentage(thisMonthRevenue,lastMonthRevenue),
-            product: calculatePercentage(
+            products: calculatePercentage(
                 thisMonthProducts.length,
                 lastMonthProducts.length,
             ),
-            user: calculatePercentage(thisMonthUsers.length,lastMonthUsers.length),
-            order: calculatePercentage(thisMonthOrders.length,lastMonthOrders.length)
+            users: calculatePercentage(thisMonthUsers.length,lastMonthUsers.length),
+            orders: calculatePercentage(thisMonthOrders.length,lastMonthOrders.length)
         }
         const revenue = allOrders.reduce((total,order)=> total + (order.total || 0),0);
 
         const count = {
             products: productsCount,
             users   :usersCount,
+            orders: allOrders.length,
             revenue
         }
         const orderMonthCounts = new Array(6).fill(0);
@@ -160,7 +159,7 @@ export const getDashboardStats = TryCatch(async(req,res,next)=>{
                 revenue: orderMonthyRevenue,
               },
               userRatio,
-              latestTransactions : modifiedLatestTransaction,
+              latestTransaction : modifiedLatestTransaction,
         }
         myCache.set(key, JSON.stringify(stats));
         
@@ -210,13 +209,12 @@ export const getPieChart = TryCatch(async(req,res,next)=>{
       User.countDocuments({ role: "admin" }),
       User.countDocuments({ role: "user" }),
     ]);
-
     const orderFullfillment = {
       processing: processingOrder,
       shipped: shippedOrder,
       delivered: deliveredOrder,
     };
-    const categoryCount = await getInventories({
+    const productCategories = await getInventories({
       categories,
       productsCount,
     });
@@ -268,7 +266,7 @@ export const getPieChart = TryCatch(async(req,res,next)=>{
 
     charts = {
       orderFullfillment,
-      categoryCount,
+      productCategories,
       stockAvailability,
       revenueDistribution,
       usersAgeGroup,
