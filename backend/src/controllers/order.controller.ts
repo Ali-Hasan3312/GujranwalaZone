@@ -18,7 +18,7 @@ export const newOrder = TryCatch(async(req: Request<{}, {}, NewOrderRequestBody>
         discount,
         total,
       } = req.body;
-      console.log(user);
+      
       
       if (!shippingInfo || !orderItems || !user || !subtotal || !tax || !total)
         return next(new ErrorHandler("Please Enter All Fields", 400));

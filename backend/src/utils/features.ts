@@ -70,8 +70,6 @@ export const invalidateCache = ({
     
     
     const categoriesCount = await Promise.all(categoriesCountPromise);
-    console.log(categoriesCount);
-  
     const categoryCount: Record<string, number>[] = [];
   
     categories.forEach((category:any, i) => {

@@ -11,7 +11,6 @@ export const newUser = TryCatch(
     next: NextFunction
   ) => {
     const { name, email, photo, gender, _id, dob } = req.body;
-   console.log("Name",name,"Email",email,"Photo",photo,"Gender",gender,"_id",_id,"DOB",dob);
    
     if (!_id || !name || !email || !photo || !gender || !dob)
       return next(new ErrorHandler("Please add all fields", 400));
